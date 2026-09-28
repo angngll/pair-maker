@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="theme-color" content="#f6f4ef">
+  <meta name="description" content="두 캐릭터의 이야기로 완성하는 나만의 페어틀. 이미지 편집부터 고해상도 PNG 저장까지.">
+  <title>페어틀 메이커</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='9' fill='%233b5148'/%3E%3Ccircle cx='12' cy='16' r='7' fill='none' stroke='%23f8f3e8' stroke-width='2'/%3E%3Ccircle cx='21' cy='16' r='7' fill='none' stroke='%23b6c5b0' stroke-width='2'/%3E%3C/svg%3E">
+  <link rel="stylesheet" href="fonts.css">
+  <link rel="stylesheet" href="style.css">
+  <script src="app.js" defer></script>
+</head>
+<body>
+  <header class="topbar"><a class="brand" href="./"><span class="brandmark">◉</span> Pair Maker<span class="edition"></span></a><div class="top-actions"><span id="save-status" role="status">불러오는 중</span><button class="primary" id="export-top">PNG 내보내기 <span aria-hidden="true">↗</span></button></div></header>
+  <div class="mobile-switch" aria-label="작업 화면"><button class="active" data-mobile="edit">편집하기</button><button data-mobile="preview">미리보기</button></div>
+  <main class="workspace">
+    <aside class="editor" aria-label="페어틀 편집">
+      <div class="editor-heading"><h1>페어틀 메이커</h1></div>
+      <nav class="tabs" aria-label="편집 항목"><button data-tab="a" class="active">캐릭터 A</button><button data-tab="b">캐릭터 B</button><button data-tab="story">관계·서사</button><button data-tab="design">디자인</button></nav>
+      <div id="panel"></div>
+      <footer class="editor-footer"><span>작업은 이 브라우저에 자동 저장됩니다.</span><button id="slots-open">저장 슬롯 5개</button><button id="backup">작업 파일 저장</button><label class="file-button">작업 불러오기<input id="restore" type="file" accept=".json,application/json"></label></footer>
+    </aside>
+    <section class="preview-area" aria-label="실시간 미리보기">
+      <div class="preview-toolbar"><div><span class="live-dot"></span> LIVE PREVIEW</div><span class="all-in-one">프로필 + 대화 + 서사 · 한 장</span><button id="preview-size" title="미리보기 크기 전환">크게 보기 ↗</button></div>
+      <div class="canvas-wrap"><canvas id="preview" role="img" aria-label="입력한 내용이 실시간으로 반영된 페어틀 미리보기"></canvas></div>
+      <p class="preview-caption"><span id="dimensions"></span><span>이미지 선택: 위치 / 크기 조절</span></p>
+    </section>
+  </main>
+  <dialog id="crop-dialog"><form method="dialog" class="dialog-head"><div><h2 id="crop-title">이미지 맞추기</h2></div><button class="icon-button" aria-label="이미지 편집 닫기">✕</button></form><p class="muted">드래그 또는 슬라이더로 위치를 조절합니다.</p><div class="crop-stage"><canvas id="crop-canvas" aria-label="이미지 크롭 영역. 아래 슬라이더로도 조절할 수 있습니다."></canvas></div><label class="range-label">확대 <output id="zoom-value"></output><input id="crop-zoom" type="range" min="0.2" max="5" step="0.01"></label><label class="range-label">가로 위치<input id="crop-x" type="range" min="-2" max="2" step="0.005"></label><label class="range-label">세로 위치<input id="crop-y" type="range" min="-2" max="2" step="0.005"></label><div class="dialog-actions"><button id="crop-fit">전체 보이기</button><button id="crop-fill">영역 채우기</button><button class="primary" id="crop-apply">적용하기</button></div></dialog>
+  <dialog id="export-dialog"><form method="dialog" class="dialog-head"><div><h2>PNG 내보내기</h2></div><button class="icon-button" aria-label="내보내기 닫기">✕</button></form><p class="muted"><strong id="export-view">대화를 포함한 페어틀 전체</strong>를 PNG 한 장으로 저장합니다.</p><label class="field">이미지 해상도<select id="export-scale"><option value="1">기본 · 가로 4,200px</option><option value="2" selected>고화질 · 가로 8,400px</option><option value="3">최고화질 · 가로 12,600px</option></select></label><label class="check"><input id="export-auto-resize" type="checkbox"> 기기 한도에 맞춰 크기 줄이기 (선택)</label><label class="check"><input id="transparent" type="checkbox"> 바깥 배경을 투명하게</label><p class="small muted">원본 이미지와 투명도를 유지한 PNG로 저장합니다. 선택한 해상도를 임의로 줄이지 않습니다. 작은 원본 이미지를 확대하면 원본보다 선명해지지는 않습니다.</p><button class="primary wide" id="make-png">PNG 만들기</button><p id="export-status" role="status"></p><div id="export-result" hidden><img id="export-image" alt="완성된 PNG. 모바일에서는 길게 눌러 저장할 수 있습니다."><div class="dialog-actions"><a id="download-png" class="button primary" download="pair-maker.png">다운로드</a><button id="share-png" hidden>공유 / 사진에 저장</button></div><p class="small muted">모바일에서 다운로드가 어려우면 이미지를 길게 눌러 저장하세요.</p></div></dialog>
+  <div id="toast" role="status"></div>
+<dialog id="slots-dialog"><form method="dialog" class="dialog-head"><h2>저장 슬롯</h2><button aria-label="슬롯 닫기">✕</button></form><p>텍스트·이미지·스티커·디자인을 함께 저장합니다. 슬롯은 이 브라우저에만 보관됩니다.</p><div id="slot-list"></div><button id="slot-undo">불러오기 직전 작업으로 돌아가기</button></dialog></body>
+</html>
