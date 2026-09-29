@@ -167,7 +167,7 @@ function picture(ctx,side,slot,x,y,w,h,circle=false,register=false){
   else if(phoneTypography&&slot==='profile'){ctx.fillStyle=state.colors.bubble;ctx.fillRect(x,y,w,h);phoneLabel(ctx,side.toUpperCase(),x+w/2,y+h/2,19,state.colors[side],w-8);}
   else{ctx.fillStyle=state.colors.bubble;ctx.globalAlpha=.6;ctx.fillRect(x,y,w,h);ctx.globalAlpha=1;text(ctx,slot==='full'?'FULL LENGTH':slot==='profile'?side.toUpperCase():'＋',x,y+h/2-12,w,slot==='profile'?42:25,state.colors[side],400,'center');if(slot==='full'){rule(ctx,x+w*.25,y+h/2+24,w*.5);text(ctx,'전신 이미지를 추가해 주세요',x+12,y+h/2+44,w-24,25,state.colors[side],400,'center');}}
   ctx.restore();if(circle){ctx.beginPath();ctx.arc(x+w/2,y+h/2,w/2,0,Math.PI*2);ctx.strokeStyle=state.colors.line;ctx.stroke();}
-  if(!phoneTypography){const credit=String(state[side].imageCredits[slot]||'').trim().replace(/^©\s*/, '');if(credit){ctx.save();ctx.font='400 20px sans-serif';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillStyle='#45404a';ctx.fillText('© '+credit,x+w/2,y+h/2,w-20);ctx.restore();}}
+  if(!phoneTypography){const credit=String(state[side].imageCredits[slot]||'').trim().replace(/^©\s*/, '');if(credit){ctx.save();ctx.font='400 20px sans-serif';ctx.textAlign=side==='a'?'left':'right';ctx.textBaseline='middle';ctx.fillStyle='#45404a';ctx.fillText('© '+credit,side==='a'?x+10:x+w-10,y+h-19,w-20);ctx.restore();}}
   if(register)hitAreas.push({side,slot,x,y,w,h});
 }
 function boxHeight(value,w,min=80,key){return Math.max(min,textHeight(value||'—',w-36,state.fontSize,400,key)+Math.max(88,styleSize(key,28)*1.55+52));}
@@ -250,7 +250,7 @@ function drawPhone(ctx,x,y,l,register){phoneTypography=true;ctx.save();ctx.trans
 function layout(){return pairLayout();}
 function renderTo(canvas,l,scale,transparent=false,register=false){canvas.width=Math.round(l.width*scale);canvas.height=Math.round(l.height*scale);const ctx=canvas.getContext('2d');ctx.scale(scale,scale);ctx.imageSmoothingEnabled=true;ctx.imageSmoothingQuality='high';if(register)hitAreas=[];drawPair(ctx,l,transparent,register);drawStickers(ctx,l,register);drawAttribution(ctx,l);return ctx;}
 // Render last so the fixed credit stays visible above stickers and in transparent PNGs.
-function drawAttribution(ctx,l){ctx.save();ctx.font='400 28px sans-serif';ctx.textAlign='center';ctx.textBaseline='middle';const label='@Angngll',w=ctx.measureText(label).width+28;rect(ctx,(l.width-w)/2,l.height-51,w,38,'rgba(255,255,255,.94)',null,5);ctx.fillStyle='#45404a';ctx.fillText(label,l.width/2,l.height-32);ctx.restore();}
+function drawAttribution(ctx,l){ctx.save();ctx.font='400 28px sans-serif';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillStyle='#45404a';ctx.fillText('@Angngll',l.width/2,l.height-32);ctx.restore();}
 function draw(){$('#preview').style.touchAction=state.stickers.length?'none':'auto';previewLayout=layout();const pixels=previewLayout.width*previewLayout.height;renderTo($('#preview'),previewLayout,Math.min(1,Math.sqrt(10000000/pixels)),false,true);$('#dimensions').textContent=`${previewLayout.width.toLocaleString()} × ${Math.round(previewLayout.height).toLocaleString()} · 글 길이에 따라 자동 확장`;}
 function scheduleDraw(){if(drawing)return;drawing=true;requestAnimationFrame(()=>{drawing=false;draw();});}
 document.fonts.addEventListener('loadingdone',scheduleDraw);
