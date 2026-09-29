@@ -183,7 +183,12 @@ function pairLayout(){
   const relAH=textHeight(state.relationA||'텍스트',860)+26,relBH=textHeight(state.relationB||'텍스트',860)+26,freeH=boxHeight(state.free,880,90,'free'),ngH=boxHeight(state.ng,880,90);
   const phoneY=40,phone=phoneLayout(390);
   const bottom=Math.max(y,stageY+relAH+relBH+freeH+60)+24,storyH=boxHeight(state.story,2540,120,'story'),etcH=boxHeight(state.etc,2540,110,'etc');
-  return {width:4200,height:Math.max(1740,bottom+storyH+etcH+86,phone.height*2.75+80)+64,header,profileY,stageY,stageH,detailY,sections,relAH,relBH,freeH,ngH,phoneY,phone,storyY:bottom,storyH,etcY:bottom+storyH+18,etcH};
+  const contentHeight=Math.max(1740,bottom+storyH+etcH+86)+64;
+  // Grow the iPhone with long sheets, keeping its 390 × 844 proportions.
+  const phoneScale=Math.min(6,Math.max(2.75,(contentHeight-500)/phone.height));
+  const width=Math.max(4200,Math.ceil(2690+phone.width*phoneScale+180));
+  const height=Math.max(contentHeight,phone.height*phoneScale+80);
+  return {width,height,header,profileY,stageY,stageH,detailY,sections,relAH,relBH,freeH,ngH,phoneY,phone,phoneScale,storyY:bottom,storyH,etcY:bottom+storyH+18,etcH};
 }
 function drawPair(ctx,l,transparent=false,register=false){
   const c=state.colors;if(!transparent){ctx.fillStyle=c.bg;ctx.fillRect(0,0,l.width,l.height);}
@@ -208,7 +213,7 @@ function drawPair(ctx,l,transparent=false,register=false){
   if(state.free){infoBox(ctx,'관계',state.free,890,y,880,l.freeH,c.ink,'left','free');y+=l.freeH+20;}
 
   ctx.save();ctx.setLineDash([18,14]);ctx.strokeStyle=c.ink;ctx.globalAlpha=.5;ctx.lineWidth=4;ctx.beginPath();ctx.moveTo(2690,110);ctx.lineTo(2690,l.height-110);ctx.stroke();ctx.restore();
-  ctx.save();ctx.translate(2690+(l.width-2690-l.phone.width*2.75)/2,(l.height-l.phone.height*2.75)/2);ctx.scale(2.75,2.75);drawPhone(ctx,0,0,l.phone,register);ctx.restore();
+  ctx.save();ctx.translate(2690+(l.width-2690-l.phone.width*l.phoneScale)/2,(l.height-l.phone.height*l.phoneScale)/2);ctx.scale(l.phoneScale,l.phoneScale);drawPhone(ctx,0,0,l.phone,register);ctx.restore();
   infoBox(ctx,'서사',state.story,60,l.storyY,2540,l.storyH,c.ink,'left','story');infoBox(ctx,'etc.',state.etc,60,l.etcY,2540,l.etcH,c.ink,'left','etc');
 }
 function centeredBubbleText(ctx,value,x,y,w,h,color){
