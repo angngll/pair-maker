@@ -147,7 +147,7 @@ async function upload(side,slot){
   };input.click();
 }
 const measure=document.createElement('canvas').getContext('2d');
-function font(ctx,size=20,weight=400){if(phoneTypography){ctx.font=`400 ${size}px -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo", "PairNotoKR", "PairNotoJP", sans-serif`;ctx.textBaseline='top';return;}ctx.font=`${Math.min(900,weight+(state.fontWeight||500)-400)} ${size}px ${fonts[state.font]||fonts.sans}`;ctx.textBaseline='top';}
+function font(ctx,size=20,weight=400){if(phoneTypography){ctx.font=`400 ${size}px -apple-system, BlinkMacSystemFont, "Helvetica Neue", sans-serif`;ctx.textBaseline='top';return;}ctx.font=`${Math.min(900,weight+(state.fontWeight||500)-400)} ${size}px ${fonts[state.font]||fonts.sans}`;ctx.textBaseline='top';}
 function lines(text,width,size=20,weight=400){
   font(measure,size,weight);const out=[];
   for(const paragraph of String(text||'').split('\n')){let row='';for(const ch of Array.from(paragraph)){if(row&&measure.measureText(row+ch).width>width){out.push(row);row=ch;}else row+=ch;}out.push(row);}
