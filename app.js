@@ -177,44 +177,48 @@ function pairLayout(){
   const nameH=Math.max(...['a','b'].map(s=>nameHeight(s)));
   const profileY=header+nameH+4;
   const metaH=Math.max(...['a','b'].map(s=>metaHeight(s)));
-  const stageY=profileY+Math.max(340,metaH)+42,stageH=830,detailY=Math.max(stageY+stageH+42,stageY+textHeight(state.relationA||'텍스트',860)+textHeight(state.relationB||'텍스트',860)+116+(state.free?boxHeight(state.free,880,90,'free'):0));
-  let y=detailY+422;const sections=[];
-  for(const [key,title]of [['personality','성격 및 캐해'],['appearance','외관 정보'],['ng','NG']]){const h=Math.max(...['a','b'].map(s=>boxHeight(state[s][key],1172,90,s+'.'+key)));sections.push({key,title,y,h});y+=h+15;}
-  const relAH=textHeight(state.relationA||'텍스트',860)+26,relBH=textHeight(state.relationB||'텍스트',860)+26,freeH=boxHeight(state.free,880,90,'free'),ngH=boxHeight(state.ng,880,90);
+  const stageY=profileY+Math.max(340,metaH)+42,stageH=830;
   const phoneY=40,phone=phoneLayout(390);
-  const bottom=Math.max(y,stageY+relAH+relBH+freeH+60)+24,storyH=boxHeight(state.story,2540,120,'story'),etcH=boxHeight(state.etc,2540,110,'etc');
-  const contentHeight=Math.max(1740,bottom+storyH+etcH+86)+64;
-  // Grow the iPhone with long sheets, keeping its 390 × 844 proportions.
-  const phoneScale=Math.min(6,Math.max(2.75,(contentHeight-500)/phone.height));
-  const width=Math.max(4200,Math.ceil(2690+phone.width*phoneScale+180));
-  const height=Math.max(contentHeight,phone.height*phoneScale+80);
-  return {width,height,header,profileY,stageY,stageH,detailY,sections,relAH,relBH,freeH,ngH,phoneY,phone,phoneScale,storyY:bottom,storyH,etcY:bottom+storyH+18,etcH};
+  function flow(extra){
+    const relationWidth=860+extra,freeWidth=880+extra,detailWidth=1172+extra/2,storyWidth=2540+extra;
+    const detailY=Math.max(stageY+stageH+42,stageY+textHeight(state.relationA||'텍스트',relationWidth)+textHeight(state.relationB||'텍스트',relationWidth)+116+(state.free?boxHeight(state.free,freeWidth,90,'free'):0));
+    let y=detailY+422;const sections=[];
+    for(const [key,title]of [['personality','성격 및 캐해'],['appearance','외관 정보'],['ng','NG']]){const h=Math.max(...['a','b'].map(s=>boxHeight(state[s][key],detailWidth,90,s+'.'+key)));sections.push({key,title,y,h});y+=h+15;}
+    const relAH=textHeight(state.relationA||'텍스트',relationWidth)+26,relBH=textHeight(state.relationB||'텍스트',relationWidth)+26,freeH=boxHeight(state.free,freeWidth,90,'free'),ngH=boxHeight(state.ng,freeWidth,90,'ng');
+    const bottom=Math.max(y,stageY+relAH+relBH+freeH+60)+24,storyH=boxHeight(state.story,storyWidth,120,'story'),etcH=boxHeight(state.etc,storyWidth,110,'etc');
+    return {detailY,sections,relAH,relBH,freeH,ngH,storyY:bottom,storyH,etcY:bottom+storyH+18,etcH,height:Math.max(1740,bottom+storyH+etcH+86,phone.height*2.75+80)+64};
+  }
+  const base=flow(0);
+  const extra=Math.min(1800,Math.max(0,Math.round((base.height-2900)*1.5)));
+  return {width:4200+extra,extra,header,profileY,stageY,stageH,phoneY,phone,...flow(extra)};
 }
 function drawPair(ctx,l,transparent=false,register=false){
   const c=state.colors;if(!transparent){ctx.fillStyle=c.bg;ctx.fillRect(0,0,l.width,l.height);}
 
   const titleLines=lines(state.title||'페어명',660,58),titleH=titleLines.length*58*1.55;
-  rect(ctx,980,39,700,titleH+14,c.panel,c.line,0);
+  rect(ctx,980+l.extra/2,39,700,titleH+14,c.panel,c.line,0);
   ctx.save();font(ctx,58);ctx.textAlign='center';ctx.textBaseline='alphabetic';ctx.fillStyle=c.ink;
-  titleLines.forEach((row,i)=>{const m=ctx.measureText(row),ascent=m.actualBoundingBoxAscent||42,descent=m.actualBoundingBoxDescent||0;inkText(ctx,row,1330,46+(i+.5)*58*1.55+(ascent-descent)/2);});ctx.restore();
+  titleLines.forEach((row,i)=>{const m=ctx.measureText(row),ascent=m.actualBoundingBoxAscent||42,descent=m.actualBoundingBoxDescent||0;inkText(ctx,row,1330+l.extra/2,46+(i+.5)*58*1.55+(ascent-descent)/2);});ctx.restore();
   if(state.subtitle)text(ctx,state.subtitle,200,64+titleH,1600,21,c.a,400,'center');
-  for(const side of ['a','b']){const x=side==='a'?60:1800,s=state[side];let nameY=l.header;for(const [key,size]of [['name',64],['en',36],['jp',36]]){if(key!=='name'&&!s[key])continue;nameY=text(ctx,s[key]||(key==='name'?side.toUpperCase():''),x+18,nameY,770,size,c[side],400,side==='b'?'right':'left',side+'.'+key);}picture(ctx,side,'profile',x+(side==='b'?442:18),l.stageY-42-340,340,340,true,register);drawMeta(ctx,s,x+(side==='b'?60:402),l.profileY+(Math.max(340,metaHeight(side))-metaHeight(side))/2,side==='b'?'right':'left',side);
+  for(const side of ['a','b']){const x=side==='a'?60:1800+l.extra,s=state[side];let nameY=l.header;for(const [key,size]of [['name',64],['en',36],['jp',36]]){if(key!=='name'&&!s[key])continue;nameY=text(ctx,s[key]||(key==='name'?side.toUpperCase():''),x+18,nameY,770,size,c[side],400,side==='b'?'right':'left',side+'.'+key);}picture(ctx,side,'profile',x+(side==='b'?442:18),l.stageY-42-340,340,340,true,register);drawMeta(ctx,s,x+(side==='b'?60:402),l.profileY+(Math.max(340,metaHeight(side))-metaHeight(side))/2,side==='b'?'right':'left',side);
     if(!images.has(assetKey(side,'full')))rect(ctx,x,l.stageY,800,l.stageH,c.panel,c.line,0);
     picture(ctx,side,'full',x,l.stageY,800,l.stageH,false,register);
-    const detailX=side==='a'?60:1428;for(let i=0;i<3;i++){rect(ctx,detailX+i*396,l.detailY,380,380,c.panel,c.line,0);picture(ctx,side,'detail'+(i+1),detailX+i*396+4,l.detailY+4,372,372,false,register);}
-    for(const item of l.sections)infoBox(ctx,item.title,s[item.key],detailX,item.y,1172,item.h,c[side],side==='b'?'right':'left',side+'.'+item.key);
+    const detailX=side==='a'?60:1428+l.extra,boxX=side==='a'?60:1428+l.extra/2;
+    for(let i=0;i<3;i++){rect(ctx,detailX+i*396,l.detailY,380,380,c.panel,c.line,0);picture(ctx,side,'detail'+(i+1),detailX+i*396+4,l.detailY+4,372,372,false,register);}
+    for(const item of l.sections)infoBox(ctx,item.title,s[item.key],boxX,item.y,1172+l.extra/2,item.h,c[side],side==='b'?'right':'left',side+'.'+item.key);
   }
   let y=l.stageY-12-170-(l.relAH+l.relBH+17)/2;
   for(const [value,right,accent,h]of [[state.relationA,true,c.a,l.relAH],[state.relationB,false,c.b,l.relBH]]){
-    text(ctx,value||'텍스트',900,y+8,860,state.fontSize,c.ink,400,'center');
-    const ay=y+h-13;ctx.strokeStyle=accent;ctx.lineWidth=3;ctx.beginPath();ctx.moveTo(890,ay);ctx.lineTo(1770,ay);ctx.moveTo(right?1748:912,ay-13);ctx.lineTo(right?1770:890,ay);ctx.lineTo(right?1748:912,ay+13);ctx.stroke();y+=h+22;
+    text(ctx,value||'텍스트',900,y+8,860+l.extra,state.fontSize,c.ink,400,'center');
+    const ay=y+h-13;ctx.strokeStyle=accent;ctx.lineWidth=3;ctx.beginPath();ctx.moveTo(890,ay);ctx.lineTo(1770+l.extra,ay);ctx.moveTo(right?1748+l.extra:912,ay-13);ctx.lineTo(right?1770+l.extra:890,ay);ctx.lineTo(right?1748+l.extra:912,ay+13);ctx.stroke();y+=h+22;
   }
   y=l.stageY+l.relAH+l.relBH+44;
-  if(state.free){infoBox(ctx,'관계',state.free,890,y,880,l.freeH,c.ink,'left','free');y+=l.freeH+20;}
+  if(state.free){infoBox(ctx,'관계',state.free,890,y,880+l.extra,l.freeH,c.ink,'left','free');y+=l.freeH+20;}
 
-  ctx.save();ctx.setLineDash([18,14]);ctx.strokeStyle=c.ink;ctx.globalAlpha=.5;ctx.lineWidth=4;ctx.beginPath();ctx.moveTo(2690,110);ctx.lineTo(2690,l.height-110);ctx.stroke();ctx.restore();
-  ctx.save();ctx.translate(2690+(l.width-2690-l.phone.width*l.phoneScale)/2,(l.height-l.phone.height*l.phoneScale)/2);ctx.scale(l.phoneScale,l.phoneScale);drawPhone(ctx,0,0,l.phone,register);ctx.restore();
-  infoBox(ctx,'서사',state.story,60,l.storyY,2540,l.storyH,c.ink,'left','story');infoBox(ctx,'etc.',state.etc,60,l.etcY,2540,l.etcH,c.ink,'left','etc');
+  const divider=2690+l.extra,phoneScale=2.75;
+  ctx.save();ctx.setLineDash([18,14]);ctx.strokeStyle=c.ink;ctx.globalAlpha=.5;ctx.lineWidth=4;ctx.beginPath();ctx.moveTo(divider,110);ctx.lineTo(divider,l.height-110);ctx.stroke();ctx.restore();
+  ctx.save();ctx.translate(divider+(l.width-divider-l.phone.width*phoneScale)/2,(l.height-l.phone.height*phoneScale)/2);ctx.scale(phoneScale,phoneScale);drawPhone(ctx,0,0,l.phone,register);ctx.restore();
+  infoBox(ctx,'서사',state.story,60,l.storyY,2540+l.extra,l.storyH,c.ink,'left','story');infoBox(ctx,'etc.',state.etc,60,l.etcY,2540+l.extra,l.etcH,c.ink,'left','etc');
 }
 function centeredBubbleText(ctx,value,x,y,w,h,color){
   const size=16,rows=lines(value,w-30,size),lineH=size*1.3;
