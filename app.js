@@ -355,4 +355,11 @@ function slotWrite(key,value){if(!db){localStorage.setItem('pair-maker-'+key,JSO
 async function renderSlots(){const saved=await Promise.all([1,2,3,4,5].map(i=>slotRead('slot-'+i)));$('#slot-list').innerHTML=saved.map((v,i)=>'<section class="slot-row"><strong>슬롯 '+(i+1)+'</strong><span>'+(v?esc(v.title||'이름 없는 페어')+' · '+esc(new Date(v.savedAt).toLocaleString()):'비어 있음')+'</span><button data-slot-save="'+(i+1)+'">현재 작업 저장</button><button data-slot-load="'+(i+1)+'" '+(!v?'disabled':'')+'>불러오기</button></section>').join('');$('#slot-undo').disabled=!(await slotRead('before-slot-load'));}
 $('#slots-open').onclick=async()=>{try{await renderSlots();$('#slots-dialog').showModal();}catch{notice('슬롯을 읽을 수 없습니다. 작업 파일 백업을 사용해 주세요.');}};
 async function restoreSlot(project){const next=validateProject(project);await slotWrite('before-slot-load',{project:clone(state)});clearTimeout(saveTimer);await saveQueue;state=next;await loadAssets();try{await ensureFont(state.font);}catch{state.font='noto';await ensureFont('noto');}renderPanel();change();await persist();}
+$('#reset-current').onclick=async()=>{
+  if(slotBusy||!confirm('현재 편집 중인 작업을 초기화할까요? 저장 슬롯은 유지되며, 슬롯 화면에서 이전 작업으로 돌아갈 수 있습니다.'))return;
+  slotBusy=true;$('#reset-current').disabled=true;
+  try{await restoreSlot(defaults());notice('현재 작업을 초기화했습니다. 저장 슬롯은 그대로 있습니다.');}
+  catch{notice('초기화하지 못했습니다. 저장 공간을 확인해 주세요.');}
+  finally{slotBusy=false;$('#reset-current').disabled=false;}
+};
 document.addEventListener('click',async e=>{const t=e.target;if(!t.dataset.slotSave&&!t.dataset.slotLoad&&t.id!=='slot-undo')return;if(slotBusy)return;slotBusy=true;t.disabled=true;try{if(t.dataset.slotSave){const key='slot-'+t.dataset.slotSave,old=await slotRead(key);if(old&&!confirm('이 슬롯에 저장된 작업을 현재 작업으로 덮어쓸까요?'))return;await slotWrite(key,{project:clone(state),title:state.title||state.a.name+' / '+state.b.name,savedAt:Date.now()});notice('슬롯에 저장했습니다.');}else{const value=await slotRead(t.id==='slot-undo'?'before-slot-load':'slot-'+t.dataset.slotLoad);if(!value)throw new Error('빈 슬롯');await restoreSlot(value.project);notice('작업을 불러왔습니다. 직전 작업으로 돌아갈 수도 있습니다.');}await renderSlots();}catch{notice('슬롯 처리에 실패했습니다. 저장 공간을 확인하고 작업 파일로 백업해 주세요.');}finally{slotBusy=false;if(t.isConnected)t.disabled=false;}});
