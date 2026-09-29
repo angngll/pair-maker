@@ -167,7 +167,7 @@ function picture(ctx,side,slot,x,y,w,h,circle=false,register=false){
   else if(phoneTypography&&slot==='profile'){ctx.fillStyle=state.colors.bubble;ctx.fillRect(x,y,w,h);phoneLabel(ctx,side.toUpperCase(),x+w/2,y+h/2,19,state.colors[side],w-8);}
   else{ctx.fillStyle=state.colors.bubble;ctx.globalAlpha=.6;ctx.fillRect(x,y,w,h);ctx.globalAlpha=1;text(ctx,slot==='full'?'FULL LENGTH':slot==='profile'?side.toUpperCase():'＋',x,y+h/2-12,w,slot==='profile'?42:25,state.colors[side],400,'center');if(slot==='full'){rule(ctx,x+w*.25,y+h/2+24,w*.5);text(ctx,'전신 이미지를 추가해 주세요',x+12,y+h/2+44,w-24,25,state.colors[side],400,'center');}}
   ctx.restore();if(circle){ctx.beginPath();ctx.arc(x+w/2,y+h/2,w/2,0,Math.PI*2);ctx.strokeStyle=state.colors.line;ctx.stroke();}
-  if(!phoneTypography){const credit=String(state[side].imageCredits[slot]||'').trim().replace(/^©\s*/, '');if(credit){ctx.save();ctx.font='400 20px sans-serif';ctx.textAlign='center';ctx.textBaseline='middle';const label='© '+credit,maxW=w-20,labelW=Math.min(maxW,ctx.measureText(label).width),cy=y+h-19;rect(ctx,x+(w-labelW)/2-6,cy-14,labelW+12,28,'rgba(255,255,255,.88)',null,4);ctx.fillStyle='#45404a';ctx.fillText(label,x+w/2,cy,maxW);ctx.restore();}}
+  if(!phoneTypography){const credit=String(state[side].imageCredits[slot]||'').trim().replace(/^©\s*/, '');if(credit){ctx.save();ctx.font='400 20px sans-serif';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillStyle='#45404a';ctx.fillText('© '+credit,x+w/2,y+h/2,w-20);ctx.restore();}}
   if(register)hitAreas.push({side,slot,x,y,w,h});
 }
 function boxHeight(value,w,min=80,key){return Math.max(min,textHeight(value||'—',w-36,state.fontSize,400,key)+Math.max(88,styleSize(key,28)*1.55+52));}
