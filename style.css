@@ -28,3 +28,8 @@ input:not([type=range]):not([type=color]):not([type=checkbox]):not([type=file]),
 #preview{touch-action:pan-x pan-y}.sticker-control{padding:12px 0;border-bottom:1px solid var(--line);display:flex;flex-wrap:wrap;gap:8px;align-items:center}.sticker-control label{width:100%;font-size:12px}.sticker-control button{font-size:12px}
 
 .slot-row{display:flex;flex-wrap:wrap;gap:8px;padding:16px 0;border-bottom:1px solid var(--line)}.slot-row strong,.slot-row span{width:100%}.slot-row span{font-size:12px}#slots-dialog{max-width:560px;width:calc(100% - 32px)}#slot-undo{margin-top:16px}
+
+/* Mirror character B description fields to match its canvas cards. */
+textarea[data-path="b.personality"],textarea[data-path="b.appearance"],textarea[data-path="b.ng"]{text-align:right}
+.upload-card>.field{margin-top:10px;font-size:11px}
+.upload-card>.field input{padding:7px 6px;font-size:11px}

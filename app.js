@@ -62,7 +62,7 @@ async function ensureFont(key){
   fontLoads.set(key,task);try{await task;}catch(e){fontLoads.delete(key);throw e;}
 }
 const palette = {messageA:'#e9e9ed',messageB:'#1687ff',messageTextA:'#33313b',messageTextB:'#ffffff',bg:'#fff2f7',panel:'#ffffff',ink:'#624f69',line:'#e6cde9',a:'#bd79af',b:'#7e9ccc',bubble:'#f5e9fa'};
-const blankCharacter = letter => ({name:`캐릭터 ${letter}`,en:'',jp:'',gender:'',age:'',height:'',body:'',personality:'',rights:'',appearance:'',ng:'',images:{}});
+const blankCharacter = letter => ({name:`캐릭터 ${letter}`,en:'',jp:'',gender:'',age:'',height:'',body:'',personality:'',rights:'',appearance:'',ng:'',imageCredits:{},images:{}});
 const defaults = () => ({version:1,designRevision:4,stickers:[],textStyles:{},groupSizes:{basic:30,detail:34},highlights:{a:'#ffe4a3',b:'#d7e9ff',shared:'#eee0ff'},phoneTime:'9:41',phoneComposer:true,phoneDraft:'',title:'페어명',subtitle:'',a:blankCharacter('A'),b:blankCharacter('B'),relationA:'A의 한마디',relationB:'B의 한마디',free:'관계 설명',ng:'',story:'',etc:'',messages:[{side:'a',text:'A의 대사'},{side:'b',text:'B의 대사'}],colors:{...palette},font:'noto',fontSize:34,fontWeight:500,fontFile:null});
 let state = defaults(), activeTab='a', activeView='pair', db=null, crop=null, drawing=false, revision=0, savedRevision=0, saveTimer, saveQueue=Promise.resolve(), outputURL=null, outputBlob=null, outputName='pair-maker.png';
 let hitAreas=[], previewLayout=null, customFace=null;
@@ -78,7 +78,7 @@ function styleSize(key,fallback){if(/\.(gender|age|height|body)$/.test(key||''))
 function defaultSize(key){return /\.name$/.test(key)?44:/\.(en|jp)$/.test(key)?26:/\.(gender|age|height|body)$/.test(key)?30:state.fontSize;}
 function field(label,path,placeholder='',multi=false,max=2000){return '<label class="field">'+label+(multi?'<textarea data-path="'+path+'" maxlength="'+max+'" placeholder="'+esc(placeholder)+'">'+esc(pathGet(path))+'</textarea>':'<input data-path="'+path+'" maxlength="120" placeholder="'+esc(placeholder)+'" value="'+esc(pathGet(path))+'">')+'</label>';}
 
-function imageCard(side,slot,label){const img=state[side].images[slot];return `<div class="upload-card ${slot==='full'?'body-pick':''}"><button class="image-pick" data-upload="${side}.${slot}" aria-label="${label} ${img?'교체':'추가'}">${img?`<img src="${img.src}" alt="${label}">`:'<span aria-hidden="true">＋</span>'}</button><p>${label}</p>${img?`<div class="image-actions"><button data-crop="${side}.${slot}">맞추기</button><button data-remove="${side}.${slot}" aria-label="${label} 삭제">삭제</button></div>`:''}</div>`;}
+function imageCard(side,slot,label){const img=state[side].images[slot];return `<div class="upload-card ${slot==='full'?'body-pick':''}"><button class="image-pick" data-upload="${side}.${slot}" aria-label="${label} ${img?'교체':'추가'}">${img?`<img src="${img.src}" alt="${label}">`:'<span aria-hidden="true">＋</span>'}</button><p>${label}</p>${img?`<div class="image-actions"><button data-crop="${side}.${slot}">맞추기</button><button data-remove="${side}.${slot}" aria-label="${label} 삭제">삭제</button></div>`:''}${field('© 출처 (선택)',side+'.imageCredits.'+slot,'작가명 / 출처')}</div>`;}
 function renderPanel(){
   const p=$('#panel');
   if(activeTab==='a'||activeTab==='b'){
@@ -106,7 +106,7 @@ function validateProject(raw){
   const s=defaults();
   const take=(v,max=2000)=>typeof v==='string'?v.slice(0,max):'';
   for(const k of ['title','subtitle','relationA','relationB','free','ng','story','etc'])s[k]=take(raw[k],['story','etc'].includes(k)?6000:2000);
-  for(const side of ['a','b']){if(!raw[side]||typeof raw[side]!=='object')throw new Error('캐릭터 데이터가 없습니다.');for(const k of ['name','en','jp','gender','age','height','body','personality','appearance','rights','ng'])s[side][k]=take(raw[side][k]);for(const [slot]of imageSlots){const im=raw[side].images?.[slot];if(im&&typeof im.src==='string'&&/^data:image\/(png|jpeg|webp|gif);base64,/.test(im.src)&&im.src.length<60000000){s[side].images[slot]={src:im.src,z:Math.min(5,Math.max(.2,Number(im.z)||1)),x:Math.min(2,Math.max(-2,Number(im.x)||0)),y:Math.min(2,Math.max(-2,Number(im.y)||0)),fit:im.fit==='cover'?'cover':'contain'};}}}
+  for(const side of ['a','b']){if(!raw[side]||typeof raw[side]!=='object')throw new Error('캐릭터 데이터가 없습니다.');for(const k of ['name','en','jp','gender','age','height','body','personality','appearance','rights','ng'])s[side][k]=take(raw[side][k]);for(const [slot]of imageSlots){s[side].imageCredits[slot]=take(raw[side].imageCredits?.[slot],120);const im=raw[side].images?.[slot];if(im&&typeof im.src==='string'&&/^data:image\/(png|jpeg|webp|gif);base64,/.test(im.src)&&im.src.length<60000000){s[side].images[slot]={src:im.src,z:Math.min(5,Math.max(.2,Number(im.z)||1)),x:Math.min(2,Math.max(-2,Number(im.x)||0)),y:Math.min(2,Math.max(-2,Number(im.y)||0)),fit:im.fit==='cover'?'cover':'contain'};}}}
   for(const k of Object.keys(palette))if(/^#[0-9a-f]{6}$/i.test(raw.colors?.[k]))s.colors[k]=raw.colors[k];
   s.font=Object.hasOwn(fonts,raw.font)?raw.font:'sans';s.fontSize=Math.min(48,Math.max(20,Number(raw.fontSize)||34));s.fontWeight=Math.min(900,Math.max(300,Number(raw.fontWeight)||500));
   if(['handwrittenSet','roundedSet','gaegu','pen','gamja','single','melody','cute'].includes(s.font))s.font='noto';
@@ -167,6 +167,7 @@ function picture(ctx,side,slot,x,y,w,h,circle=false,register=false){
   else if(phoneTypography&&slot==='profile'){ctx.fillStyle=state.colors.bubble;ctx.fillRect(x,y,w,h);phoneLabel(ctx,side.toUpperCase(),x+w/2,y+h/2,19,state.colors[side],w-8);}
   else{ctx.fillStyle=state.colors.bubble;ctx.globalAlpha=.6;ctx.fillRect(x,y,w,h);ctx.globalAlpha=1;text(ctx,slot==='full'?'FULL LENGTH':slot==='profile'?side.toUpperCase():'＋',x,y+h/2-12,w,slot==='profile'?42:25,state.colors[side],400,'center');if(slot==='full'){rule(ctx,x+w*.25,y+h/2+24,w*.5);text(ctx,'전신 이미지를 추가해 주세요',x+12,y+h/2+44,w-24,25,state.colors[side],400,'center');}}
   ctx.restore();if(circle){ctx.beginPath();ctx.arc(x+w/2,y+h/2,w/2,0,Math.PI*2);ctx.strokeStyle=state.colors.line;ctx.stroke();}
+  if(!phoneTypography){const credit=String(state[side].imageCredits[slot]||'').trim().replace(/^©\s*/, '');if(credit){ctx.save();ctx.font='400 20px sans-serif';ctx.textAlign='center';ctx.textBaseline='middle';const label='© '+credit,maxW=w-20,labelW=Math.min(maxW,ctx.measureText(label).width),cy=y+h-19;rect(ctx,x+(w-labelW)/2-6,cy-14,labelW+12,28,'rgba(255,255,255,.88)',null,4);ctx.fillStyle='#45404a';ctx.fillText(label,x+w/2,cy,maxW);ctx.restore();}}
   if(register)hitAreas.push({side,slot,x,y,w,h});
 }
 function boxHeight(value,w,min=80,key){return Math.max(min,textHeight(value||'—',w-36,state.fontSize,400,key)+Math.max(88,styleSize(key,28)*1.55+52));}
@@ -182,7 +183,7 @@ function pairLayout(){
   const relAH=textHeight(state.relationA||'텍스트',860)+26,relBH=textHeight(state.relationB||'텍스트',860)+26,freeH=boxHeight(state.free,880,90,'free'),ngH=boxHeight(state.ng,880,90);
   const phoneY=40,phone=phoneLayout(390);
   const bottom=Math.max(y,stageY+relAH+relBH+freeH+60)+24,storyH=boxHeight(state.story,2540,120,'story'),etcH=boxHeight(state.etc,2540,110,'etc');
-  return {width:4200,height:Math.max(1740,bottom+storyH+etcH+86,phone.height*2.75+80),header,profileY,stageY,stageH,detailY,sections,relAH,relBH,freeH,ngH,phoneY,phone,storyY:bottom,storyH,etcY:bottom+storyH+18,etcH};
+  return {width:4200,height:Math.max(1740,bottom+storyH+etcH+86,phone.height*2.75+80)+64,header,profileY,stageY,stageH,detailY,sections,relAH,relBH,freeH,ngH,phoneY,phone,storyY:bottom,storyH,etcY:bottom+storyH+18,etcH};
 }
 function drawPair(ctx,l,transparent=false,register=false){
   const c=state.colors;if(!transparent){ctx.fillStyle=c.bg;ctx.fillRect(0,0,l.width,l.height);}
@@ -247,7 +248,9 @@ function drawPhone(ctx,x,y,l,register){phoneTypography=true;ctx.save();ctx.trans
   rect(ctx,w/2-58,h-14,116,4,'#29282f',null,3);ctx.restore();phoneTypography=false;
 }
 function layout(){return pairLayout();}
-function renderTo(canvas,l,scale,transparent=false,register=false){canvas.width=Math.round(l.width*scale);canvas.height=Math.round(l.height*scale);const ctx=canvas.getContext('2d');ctx.scale(scale,scale);ctx.imageSmoothingEnabled=true;ctx.imageSmoothingQuality='high';if(register)hitAreas=[];drawPair(ctx,l,transparent,register);drawStickers(ctx,l,register);return ctx;}
+function renderTo(canvas,l,scale,transparent=false,register=false){canvas.width=Math.round(l.width*scale);canvas.height=Math.round(l.height*scale);const ctx=canvas.getContext('2d');ctx.scale(scale,scale);ctx.imageSmoothingEnabled=true;ctx.imageSmoothingQuality='high';if(register)hitAreas=[];drawPair(ctx,l,transparent,register);drawStickers(ctx,l,register);drawAttribution(ctx,l);return ctx;}
+// Render last so the fixed credit stays visible above stickers and in transparent PNGs.
+function drawAttribution(ctx,l){ctx.save();ctx.font='400 28px sans-serif';ctx.textAlign='center';ctx.textBaseline='middle';const label='@Angngll',w=ctx.measureText(label).width+28;rect(ctx,(l.width-w)/2,l.height-51,w,38,'rgba(255,255,255,.94)',null,5);ctx.fillStyle='#45404a';ctx.fillText(label,l.width/2,l.height-32);ctx.restore();}
 function draw(){$('#preview').style.touchAction=state.stickers.length?'none':'auto';previewLayout=layout();const pixels=previewLayout.width*previewLayout.height;renderTo($('#preview'),previewLayout,Math.min(1,Math.sqrt(10000000/pixels)),false,true);$('#dimensions').textContent=`${previewLayout.width.toLocaleString()} × ${Math.round(previewLayout.height).toLocaleString()} · 글 길이에 따라 자동 확장`;}
 function scheduleDraw(){if(drawing)return;drawing=true;requestAnimationFrame(()=>{drawing=false;draw();});}
 document.fonts.addEventListener('loadingdone',scheduleDraw);
