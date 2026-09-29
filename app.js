@@ -181,12 +181,13 @@ function pairLayout(){
   const phoneY=40,phone=phoneLayout(390);
   function flow(extra){
     const relationWidth=860+extra,freeWidth=880+extra,detailWidth=1172+extra/2,storyWidth=2540+extra;
+    const detailGap=16,detailSize=(detailWidth-detailGap*2)/3;
     const detailY=Math.max(stageY+stageH+42,stageY+textHeight(state.relationA||'텍스트',relationWidth)+textHeight(state.relationB||'텍스트',relationWidth)+116+(state.free?boxHeight(state.free,freeWidth,90,'free'):0));
-    let y=detailY+422;const sections=[];
+    let y=detailY+detailSize+42;const sections=[];
     for(const [key,title]of [['personality','성격 및 캐해'],['appearance','외관 정보'],['ng','NG']]){const h=Math.max(...['a','b'].map(s=>boxHeight(state[s][key],detailWidth,90,s+'.'+key)));sections.push({key,title,y,h});y+=h+15;}
     const relAH=textHeight(state.relationA||'텍스트',relationWidth)+26,relBH=textHeight(state.relationB||'텍스트',relationWidth)+26,freeH=boxHeight(state.free,freeWidth,90,'free'),ngH=boxHeight(state.ng,freeWidth,90,'ng');
     const bottom=Math.max(y,stageY+relAH+relBH+freeH+60)+24,storyH=boxHeight(state.story,storyWidth,120,'story'),etcH=boxHeight(state.etc,storyWidth,110,'etc');
-    return {detailY,sections,relAH,relBH,freeH,ngH,storyY:bottom,storyH,etcY:bottom+storyH+18,etcH,height:Math.max(1740,bottom+storyH+etcH+86,phone.height*2.75+80)+64};
+    return {detailY,detailGap,detailSize,sections,relAH,relBH,freeH,ngH,storyY:bottom,storyH,etcY:bottom+storyH+18,etcH,height:Math.max(1740,bottom+storyH+etcH+86,phone.height*2.75+80)+64};
   }
   const base=flow(0);
   const extra=Math.min(1800,Math.max(0,Math.round((base.height-2900)*1.5)));
@@ -203,8 +204,8 @@ function drawPair(ctx,l,transparent=false,register=false){
   for(const side of ['a','b']){const x=side==='a'?60:1800+l.extra,s=state[side];let nameY=l.header;for(const [key,size]of [['name',64],['en',36],['jp',36]]){if(key!=='name'&&!s[key])continue;nameY=text(ctx,s[key]||(key==='name'?side.toUpperCase():''),x+18,nameY,770,size,c[side],400,side==='b'?'right':'left',side+'.'+key);}picture(ctx,side,'profile',x+(side==='b'?442:18),l.stageY-42-340,340,340,true,register);drawMeta(ctx,s,x+(side==='b'?60:402),l.profileY+(Math.max(340,metaHeight(side))-metaHeight(side))/2,side==='b'?'right':'left',side);
     if(!images.has(assetKey(side,'full')))rect(ctx,x,l.stageY,800,l.stageH,c.panel,c.line,0);
     picture(ctx,side,'full',x,l.stageY,800,l.stageH,false,register);
-    const detailX=side==='a'?60:1428+l.extra,boxX=side==='a'?60:1428+l.extra/2;
-    for(let i=0;i<3;i++){rect(ctx,detailX+i*396,l.detailY,380,380,c.panel,c.line,0);picture(ctx,side,'detail'+(i+1),detailX+i*396+4,l.detailY+4,372,372,false,register);}
+    const boxX=side==='a'?60:1428+l.extra/2;
+    for(let i=0;i<3;i++){const detailX=boxX+i*(l.detailSize+l.detailGap);rect(ctx,detailX,l.detailY,l.detailSize,l.detailSize,c.panel,c.line,0);picture(ctx,side,'detail'+(i+1),detailX+4,l.detailY+4,l.detailSize-8,l.detailSize-8,false,register);}
     for(const item of l.sections)infoBox(ctx,item.title,s[item.key],boxX,item.y,1172+l.extra/2,item.h,c[side],side==='b'?'right':'left',side+'.'+item.key);
   }
   let y=l.stageY-12-170-(l.relAH+l.relBH+17)/2;
