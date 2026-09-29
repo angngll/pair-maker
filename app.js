@@ -167,7 +167,7 @@ function picture(ctx,side,slot,x,y,w,h,circle=false,register=false){
   else if(phoneTypography&&slot==='profile'){ctx.fillStyle=state.colors.bubble;ctx.fillRect(x,y,w,h);phoneLabel(ctx,side.toUpperCase(),x+w/2,y+h/2,19,state.colors[side],w-8);}
   else{ctx.fillStyle=state.colors.bubble;ctx.globalAlpha=.6;ctx.fillRect(x,y,w,h);ctx.globalAlpha=1;text(ctx,slot==='full'?'FULL LENGTH':slot==='profile'?side.toUpperCase():'＋',x,y+h/2-12,w,slot==='profile'?42:25,state.colors[side],400,'center');if(slot==='full'){rule(ctx,x+w*.25,y+h/2+24,w*.5);text(ctx,'전신 이미지를 추가해 주세요',x+12,y+h/2+44,w-24,25,state.colors[side],400,'center');}}
   ctx.restore();if(circle){ctx.beginPath();ctx.arc(x+w/2,y+h/2,w/2,0,Math.PI*2);ctx.strokeStyle=state.colors.line;ctx.stroke();}
-  if(!phoneTypography){const credit=String(state[side].imageCredits[slot]||'').trim().replace(/^©\s*/, '');if(credit){ctx.save();ctx.font='400 20px sans-serif';ctx.textAlign=side==='a'?'left':'right';ctx.textBaseline='middle';ctx.fillStyle='#45404a';ctx.fillText('© '+credit,side==='a'?x+10:x+w-10,y+h-19,w-20);ctx.restore();}}
+  if(!phoneTypography){const credit=String(state[side].imageCredits[slot]||'').trim().replace(/^©\s*/, '');if(credit){ctx.save();ctx.font='400 20px sans-serif';ctx.textAlign=side==='a'?'left':'right';ctx.textBaseline='middle';ctx.fillStyle='#45404a';ctx.fillText('© '+credit,side==='a'?x+10:x+w-10,y+h+19,w-20);ctx.restore();}}
   if(register)hitAreas.push({side,slot,x,y,w,h});
 }
 function boxHeight(value,w,min=80,key){return Math.max(min,textHeight(value||'—',w-36,state.fontSize,400,key)+Math.max(88,styleSize(key,28)*1.55+52));}
@@ -177,8 +177,8 @@ function pairLayout(){
   const nameH=Math.max(...['a','b'].map(s=>nameHeight(s)));
   const profileY=header+nameH+4;
   const metaH=Math.max(...['a','b'].map(s=>metaHeight(s)));
-  const stageY=profileY+Math.max(340,metaH)+12,stageH=830,detailY=Math.max(stageY+stageH+18,stageY+textHeight(state.relationA||'텍스트',860)+textHeight(state.relationB||'텍스트',860)+116+(state.free?boxHeight(state.free,880,90,'free'):0));
-  let y=detailY+398;const sections=[];
+  const stageY=profileY+Math.max(340,metaH)+42,stageH=830,detailY=Math.max(stageY+stageH+42,stageY+textHeight(state.relationA||'텍스트',860)+textHeight(state.relationB||'텍스트',860)+116+(state.free?boxHeight(state.free,880,90,'free'):0));
+  let y=detailY+422;const sections=[];
   for(const [key,title]of [['personality','성격 및 캐해'],['appearance','외관 정보'],['ng','NG']]){const h=Math.max(...['a','b'].map(s=>boxHeight(state[s][key],1172,90,s+'.'+key)));sections.push({key,title,y,h});y+=h+15;}
   const relAH=textHeight(state.relationA||'텍스트',860)+26,relBH=textHeight(state.relationB||'텍스트',860)+26,freeH=boxHeight(state.free,880,90,'free'),ngH=boxHeight(state.ng,880,90);
   const phoneY=40,phone=phoneLayout(390);
@@ -193,7 +193,7 @@ function drawPair(ctx,l,transparent=false,register=false){
   ctx.save();font(ctx,58);ctx.textAlign='center';ctx.textBaseline='alphabetic';ctx.fillStyle=c.ink;
   titleLines.forEach((row,i)=>{const m=ctx.measureText(row),ascent=m.actualBoundingBoxAscent||42,descent=m.actualBoundingBoxDescent||0;inkText(ctx,row,1330,46+(i+.5)*58*1.55+(ascent-descent)/2);});ctx.restore();
   if(state.subtitle)text(ctx,state.subtitle,200,64+titleH,1600,21,c.a,400,'center');
-  for(const side of ['a','b']){const x=side==='a'?60:1800,s=state[side];let nameY=l.header;for(const [key,size]of [['name',64],['en',36],['jp',36]]){if(key!=='name'&&!s[key])continue;nameY=text(ctx,s[key]||(key==='name'?side.toUpperCase():''),x+18,nameY,770,size,c[side],400,side==='b'?'right':'left',side+'.'+key);}picture(ctx,side,'profile',x+(side==='b'?442:18),l.stageY-12-340,340,340,true,register);drawMeta(ctx,s,x+(side==='b'?60:402),l.profileY+(Math.max(340,metaHeight(side))-metaHeight(side))/2,side==='b'?'right':'left',side);
+  for(const side of ['a','b']){const x=side==='a'?60:1800,s=state[side];let nameY=l.header;for(const [key,size]of [['name',64],['en',36],['jp',36]]){if(key!=='name'&&!s[key])continue;nameY=text(ctx,s[key]||(key==='name'?side.toUpperCase():''),x+18,nameY,770,size,c[side],400,side==='b'?'right':'left',side+'.'+key);}picture(ctx,side,'profile',x+(side==='b'?442:18),l.stageY-42-340,340,340,true,register);drawMeta(ctx,s,x+(side==='b'?60:402),l.profileY+(Math.max(340,metaHeight(side))-metaHeight(side))/2,side==='b'?'right':'left',side);
     if(!images.has(assetKey(side,'full')))rect(ctx,x,l.stageY,800,l.stageH,c.panel,c.line,0);
     picture(ctx,side,'full',x,l.stageY,800,l.stageH,false,register);
     const detailX=side==='a'?60:1428;for(let i=0;i<3;i++){rect(ctx,detailX+i*396,l.detailY,380,380,c.panel,c.line,0);picture(ctx,side,'detail'+(i+1),detailX+i*396+4,l.detailY+4,372,372,false,register);}
